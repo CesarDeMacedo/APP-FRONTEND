@@ -2,6 +2,7 @@ import { useRef, useState, DragEvent, ChangeEvent } from 'react'
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/webp', 'image/png']
 const ACCEPTED_EXTS = ['.jpg', '.jpeg', '.webp', '.png']
+const MAX_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB
 
 interface Props {
   label: string
@@ -21,15 +22,23 @@ export default function ImageDropZone({ label, sublabel, file, onFile, onClear }
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const [typeError, setTypeError] = useState(false)
+  const [sizeError, setSizeError] = useState(false)
 
   function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return
     const selected = files[0]
     if (!isValidFile(selected)) {
       setTypeError(true)
+      setSizeError(false)
+      return
+    }
+    if (selected.size > MAX_SIZE_BYTES) {
+      setSizeError(true)
+      setTypeError(false)
       return
     }
     setTypeError(false)
+    setSizeError(false)
     onFile(selected)
   }
 
@@ -112,6 +121,9 @@ export default function ImageDropZone({ label, sublabel, file, onFile, onClear }
 
       {typeError && (
         <p className="text-xs text-red-500">Only .jpg, .jpeg, .webp, or .png files are accepted.</p>
+      )}
+      {sizeError && (
+        <p className="text-xs text-red-500">File exceeds the 10 MB limit.</p>
       )}
 
       <input

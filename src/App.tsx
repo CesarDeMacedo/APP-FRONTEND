@@ -1,8 +1,11 @@
 import { useRef, useState } from 'react'
 import ImageDropZone from './components/ImageDropZone'
 
-const WEBHOOK_URL =
-  'https://cesardemacedo.app.n8n.cloud/webhook/eb00b9cf-91b8-4544-bcd3-f27cbbc94d89'
+const WEBHOOK_URL = import.meta.env.VITE_WEBHOOK_URL as string | undefined
+
+if (!WEBHOOK_URL) {
+  throw new Error('VITE_WEBHOOK_URL is not defined. Add it to your .env file.')
+}
 
 export default function App() {
   const [image1, setImage1] = useState<File | null>(null)
