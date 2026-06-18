@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react'
 import ImageDropZone from './components/ImageDropZone'
 
-const WEBHOOK_URL = import.meta.env.VITE_WEBHOOK_URL as string | undefined
-
-if (!WEBHOOK_URL) {
-  throw new Error('VITE_WEBHOOK_URL is not defined. Add it to your .env file.')
-}
+const WEBHOOK_URL = (() => {
+  const url = import.meta.env.VITE_WEBHOOK_URL as string | undefined
+  if (!url) throw new Error('VITE_WEBHOOK_URL is not defined. Add it to your .env file.')
+  return url
+})()
 
 export default function App() {
   const [image1, setImage1] = useState<File | null>(null)
