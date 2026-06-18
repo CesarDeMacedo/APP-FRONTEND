@@ -8,6 +8,7 @@ interface Props {
   sublabel: string
   file: File | null
   onFile: (file: File) => void
+  onClear: () => void
 }
 
 function isValidFile(file: File): boolean {
@@ -16,7 +17,7 @@ function isValidFile(file: File): boolean {
   return ACCEPTED_EXTS.some((ext) => name.endsWith(ext))
 }
 
-export default function ImageDropZone({ label, sublabel, file, onFile }: Props) {
+export default function ImageDropZone({ label, sublabel, file, onFile, onClear }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const [typeError, setTypeError] = useState(false)
@@ -74,12 +75,24 @@ export default function ImageDropZone({ label, sublabel, file, onFile }: Props) 
         ].join(' ')}
       >
         {previewUrl ? (
-          <img
-            src={previewUrl}
-            alt="preview"
-            className="absolute inset-0 w-full h-full object-cover"
-            onLoad={() => URL.revokeObjectURL(previewUrl)}
-          />
+          <>
+            <img
+              src={previewUrl}
+              alt="preview"
+              className="absolute inset-0 w-full h-full object-contain p-2"
+              onLoad={() => URL.revokeObjectURL(previewUrl)}
+            />
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onClear() }}
+              className="absolute top-2 right-2 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-white/90 shadow hover:bg-red-50 hover:text-red-600 text-gray-500 transition-colors duration-150"
+              aria-label="Remove image"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </>
         ) : (
           <>
             <UploadIcon />

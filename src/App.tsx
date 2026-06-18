@@ -76,12 +76,14 @@ export default function App() {
               sublabel="Upload person photo"
               file={image1}
               onFile={setImage1}
+              onClear={() => setImage1(null)}
             />
             <ImageDropZone
               label="Image 2"
               sublabel="Upload clothing item"
               file={image2}
               onFile={setImage2}
+              onClear={() => setImage2(null)}
             />
           </div>
         </section>
