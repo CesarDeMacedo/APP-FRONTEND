@@ -1,7 +1,7 @@
 import { useRef, useState, DragEvent, ChangeEvent } from 'react'
 
-const ACCEPTED_TYPES = ['image/jpeg', 'image/webp']
-const ACCEPTED_EXTS = ['.jpg', '.jpeg', '.webp']
+const ACCEPTED_TYPES = ['image/jpeg', 'image/webp', 'image/png']
+const ACCEPTED_EXTS = ['.jpg', '.jpeg', '.webp', '.png']
 
 interface Props {
   label: string
@@ -98,7 +98,7 @@ export default function ImageDropZone({ label, sublabel, file, onFile, onClear }
             <UploadIcon />
             <div className="text-center px-4">
               <p className="text-sm font-medium text-gray-700">{sublabel}</p>
-              <p className="text-xs text-gray-400 mt-0.5">JPG, JPEG or WEBP</p>
+              <p className="text-xs text-gray-400 mt-0.5">JPG, JPEG, WEBP or PNG</p>
             </div>
           </>
         )}
@@ -111,13 +111,13 @@ export default function ImageDropZone({ label, sublabel, file, onFile, onClear }
       </div>
 
       {typeError && (
-        <p className="text-xs text-red-500">Only .jpg, .jpeg, or .webp files are accepted.</p>
+        <p className="text-xs text-red-500">Only .jpg, .jpeg, .webp, or .png files are accepted.</p>
       )}
 
       <input
         ref={inputRef}
         type="file"
-        accept=".jpg,.jpeg,.webp,image/jpeg,image/webp"
+        accept=".jpg,.jpeg,.webp,.png,image/jpeg,image/webp,image/png"
         className="hidden"
         onChange={onChange}
       />
