@@ -1,13 +1,14 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import ImageDropZone from './components/ImageDropZone'
+import Auth from './components/Auth'
+import { supabase } from './lib/supabaseClient'
 
-const WEBHOOK_URL = (() => {
-  const url = import.meta.env.VITE_WEBHOOK_URL as string | undefined
-  if (!url) throw new Error('VITE_WEBHOOK_URL is not defined. Add it to your .env file.')
-  return url
-})()
+const GENERATE_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`
 
 export default function App() {
+  const [session, setSession] = useState<Session | null>(null)
+  const [sessionLoading, setSessionLoading] = useState(true)
   const [image1, setImage1] = useState<File | null>(null)
   const [image2, setImage2] = useState<File | null>(null)
   const [resultUrl, setResultUrl] = useState<string | null>(null)
@@ -15,11 +16,25 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const prevResultUrl = useRef<string | null>(null)
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      setSessionLoading(false)
+    })
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession)
+    })
+
+    return () => listener.subscription.unsubscribe()
+  }, [])
+
   async function handleGenerate() {
     if (!image1 || !image2) {
       alert('Please upload both images.')
       return
     }
+    if (!session) return
 
     setLoading(true)
     setError(null)
@@ -35,7 +50,14 @@ export default function App() {
       form.append('image1', image1)
       form.append('image2', image2)
 
-      const response = await fetch(WEBHOOK_URL, { method: 'POST', body: form })
+      const response = await fetch(GENERATE_FUNCTION_URL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: form,
+      })
 
       if (!response.ok) {
         throw new Error(`Server responded with ${response.status}`)
@@ -54,13 +76,23 @@ export default function App() {
 
   const canGenerate = !!image1 && !!image2 && !loading
 
+  if (sessionLoading) return null
+
+  if (!session) return <Auth />
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="border-b border-gray-100 py-5 px-6 flex items-center justify-center">
+      <header className="border-b border-gray-100 py-5 px-6 flex items-center justify-center relative">
         <span className="tracking-[0.25em] text-xs font-semibold uppercase text-gray-900">
           AI Image Generator
         </span>
+        <button
+          onClick={() => supabase.auth.signOut()}
+          className="absolute right-6 text-xs text-gray-400 hover:text-gray-600 transition-colors duration-150"
+        >
+          Sign out
+        </button>
       </header>
 
       <main className="max-w-2xl mx-auto px-6 py-12 flex flex-col gap-10">
@@ -123,12 +155,21 @@ export default function App() {
             )}
 
             {!loading && resultUrl && !error && (
-              <div className="border border-gray-100 overflow-hidden">
-                <img
-                  src={resultUrl}
-                  alt="Generated result"
-                  className="w-full h-auto block"
-                />
+              <div className="flex flex-col gap-3">
+                <div className="border border-gray-100 overflow-hidden">
+                  <img
+                    src={resultUrl}
+                    alt="Generated result"
+                    className="w-full h-auto block"
+                  />
+                </div>
+                <a
+                  href={resultUrl}
+                  download="generated-image.png"
+                  className="w-full py-3.5 text-sm font-medium tracking-widest uppercase text-center transition-colors duration-150 bg-gray-900 text-white hover:bg-gray-700"
+                >
+                  Download Image
+                </a>
               </div>
             )}
           </section>
